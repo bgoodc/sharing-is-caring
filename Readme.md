@@ -8,7 +8,7 @@ Using pip:
 ```bash
 $ git clone https://github.com/bgoodc/sharing-is-caring.git
 $ cd sharing-is-caring
-# pip install .
+$ pip install .
 ```
 
 ## Authors
