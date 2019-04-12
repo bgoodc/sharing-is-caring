@@ -12,6 +12,6 @@ $ pip install .
 ```
 
 ## Authors
-Geelon So
-Shiline Ni
-Brian Goodchild
+* Geelon So 
+* Shilin Ni
+* Brian Goodchild
