@@ -14,7 +14,7 @@ setup(
             'pandas',
             'tensorflow',
             'keras',
-            'sklearn'
+            'scikit-learn'
         ],
         dependency_links=['https://github.com/tensorflow/privacy.git']
 )
