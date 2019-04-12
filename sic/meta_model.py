@@ -9,7 +9,7 @@ from privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 # META MODEL
 class MetaModel:
     def __init__(self, num_peers, input_shape, X, y, models, flags=None):
-	"""
+        """
         Implements meta-model
 
         Args:
