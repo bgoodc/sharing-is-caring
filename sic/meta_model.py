@@ -34,43 +34,43 @@ class MetaModel:
 
         # initialize meta-model
         self.model = model = Sequential([
-	    Dense(2*num_peers + 2, input_shape=input_shape),
-	    Activation('relu'),
-	    Dense(num_peers),
-	    Activation('softmax'),
-	])
+            Dense(2*num_peers + 2, input_shape=input_shape),
+            Activation('relu'),
+            Dense(num_peers),
+            Activation('softmax'),
+        ])
 
         # set flags
         if flags is None:
-	    flags = self.default_flags()
+            flags = self.default_flags()
         self.flags = flags
-
-
+        
+        
         # optimizer (see code from mnist example in tensoflow/privacy)
         if flags['dpsgd']:
-	    dp_average_query = GaussianAverageQuery(
-		flags['l2_norm_clip'],
-		flags['l2_norm_clip'] * flags['noise_multiplier'],
-		flags['microbatches'])
-	    optimizer = DPGradientDescentOptimizer(
-		dp_average_query,
-		flags['microbatches'],
-		learning_rate=flags['learning_rate'],
-		unroll_microbatches=True)
+            dp_average_query = GaussianAverageQuery(
+                flags['l2_norm_clip'],
+                flags['l2_norm_clip'] * flags['noise_multiplier'],
+                flags['microbatches'])
+            optimizer = DPGradientDescentOptimizer(
+                dp_average_query,
+                flags['microbatches'],
+                learning_rate=flags['learning_rate'],
+                unroll_microbatches=True)
         else:
-	    optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
+            optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
 
         self.model.compile(optimizer=optimizer, loss='mean_squared_error',
-	                   metrics=['accuracy'])
+                           metrics=['accuracy'])
 
     def predict_classes(self, X, batch_size=None):
-	"""Given a list of input data, return the output prediction.
+        """Given a list of input data, return the output prediction.
         """
         which_expert = self.get_experts(X)
         predictions = np.transpose([model.predict_classes(X)
-	                            for model in self.models])
+                                    for model in self.models])
         expert_prediction = [pair[1][pair[0]]
-	                     for pair in zip(which_expert, predictions)]
+                             for pair in zip(which_expert, predictions)]
 
         return np.array(expert_prediction)
 
@@ -97,7 +97,7 @@ class MetaModel:
         """Sets the weights for each layer in the model
         """
         for i, layer in enumerate(self.model.layers):
-	    layer.set_weights(weights[i])
+            layer.set_weights(weights[i])
             
     def compute_gradient(self, X=None, Y=None, update=True):
         """
@@ -107,24 +107,24 @@ class MetaModel:
         X: data matrix with training instances
         Y: for each instance, a vector describing correctness of each peer
            e.g. Y_i = [ 1 0 0 1 0 1 1 ] means that on the ith training example
-	   the 0th, 3rd, 5th, and 6th peers were correct.
+           the 0th, 3rd, 5th, and 6th peers were correct.
         update: if True, compute gradient and take a step
-	        if False, compute_gradient will have no side-effect on MetaModel
+                if False, compute_gradient will have no side-effect on MetaModel
         """
         if X is None:
-	    X = self.X
+            X = self.X
         if Y is None:
-	    Y = self.Y
+            Y = self.Y
 
         saved_weights = self.get_model_weights()
         self.model.train_on_batch(X, Y)
 
         gradient = []
         for i, layer in enumerate(self.model.layers):
-	    gradient.append(layer.get_weights() - saved_weights[i])
+            gradient.append(layer.get_weights() - saved_weights[i])
 
         if not update:
-	    self.set_model_weights(saved_weights)
+            self.set_model_weights(saved_weights)
 
         return gradient
 
