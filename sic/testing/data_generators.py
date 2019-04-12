@@ -87,12 +87,12 @@ class MultiModalData:
                     label = 1 - label
                 y.append(label)
 
-            X = np.array(X)
-            y = np.array(y)
-            df = pd.DataFrame()
-            for i in range(self.dimension):
-                df[f'{i}'] = X[:,i]
-            df['y'] = y
-            if not randomize:
-                return df
-            return df.sample(frac=1).reset_index(drop=True)
+        X = np.array(X)
+        y = np.array(y)
+        df = pd.DataFrame()
+        for i in range(self.dimension):
+            df[f'{i}'] = X[:,i]
+        df['y'] = y
+        if not randomize:
+            return df
+        return df.sample(frac=1).reset_index(drop=True)
