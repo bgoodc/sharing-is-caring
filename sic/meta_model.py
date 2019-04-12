@@ -155,11 +155,7 @@ class MetaModel:
         output = np.empty([num_experts, num_instances])
 
         for i, model in enumerate(models):
-            y_p=model.predict(X)
-        if len(y_p.shape)>1 and y_p.shape[1]>1:
-	    predictions = np.argmax(model.predict(X), axis=1)
-        else:
-	    predictions = model.predict(X)
+            predictions = model.predict_classes(X)
             output[i] = np.equal(predictions, y)
 
         return np.transpose(output)
