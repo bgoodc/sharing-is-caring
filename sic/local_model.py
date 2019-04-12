@@ -33,7 +33,7 @@ class LocalLinearModel(LocalModel):
 
     def fit(self, X, y, epochs=30):
         y_categorical = to_categorical(y, num_classes=self.output_dim)
-        self.model.fit(X, y_categorical, nb_epochs=epochs)
+        self.model.fit(X, y_categorical, nb_epoch=epochs)
 
     def predict_classes(self, X):
         return self.model.predict_classes(X)
