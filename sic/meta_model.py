@@ -8,7 +8,7 @@ from privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 
 # META MODEL
 class MetaModel:
-    def __init__(self, num_peers, input_shape, X, y, models, flags=None):
+    def __init__(self, num_peers, input_shape, models, X=None, y=None,flags=None):
         """
         Implements meta-model
 
@@ -30,7 +30,8 @@ class MetaModel:
         assert len(models) == num_peers, "num_peers != len(models)"
 
         # compute expert_correctness matrix
-        self.Y = self.zero_one_loss(X, y, models)
+        if X is not None:
+          self.Y = self.zero_one_loss(X, y, models)
 
         # initialize meta-model
         self.model = model = Sequential([
@@ -77,10 +78,14 @@ class MetaModel:
     def accuracy(self, X_test, y_test):
         return np.mean(np.equal(self.predict_classes(X_test), y_test))
 
-    def fit(self):
+    def fit(self, x=None, y=None):
         """Run the fit function on model.
         """
-        self.model.fit(self.X, self.Y)
+        if x is not None:
+          py=self.zero_one_loss(x,y,self.models)
+          self.model.fit(x, py,batch_size=1)
+        else:
+          self.model.fit(self.X, self.Y,batch_size=1)
 
     def get_experts(self, X):
         """Given a list of input data, return a list of experts for each data.
@@ -98,7 +103,7 @@ class MetaModel:
         """
         for i, layer in enumerate(self.model.layers):
             layer.set_weights(weights[i])
-            
+    
     def compute_gradient(self, X=None, Y=None, update=True):
         """
         Computes gradients, possibly updating the meta-model
@@ -112,9 +117,10 @@ class MetaModel:
                 if False, compute_gradient will have no side-effect on MetaModel
         """
         if X is None:
-            X = self.X
-        if Y is None:
-            Y = self.Y
+          X = self.X
+          Y = self.Y
+        else:
+          Y=self.zero_one_loss(X,Y,self.models)
 
         saved_weights = self.get_model_weights()
         self.model.train_on_batch(X, Y)
@@ -132,14 +138,16 @@ class MetaModel:
     def update_gradient(self, gradients):
         """Averages array of gradients and add to model weights
         """
+        
         weights = self.get_model_weights()
         for i, layer in enumerate(self.model.layers):
-            avg_grad = np.mean(np.array([gradient[i] for gradient in gradients]))
+            avg_grad=0
+            avg_grad += np.mean(np.array([gradient[i] for gradient in gradients]))
         layer.set_weights(weights[i] + avg_grad)
 
 
     @staticmethod
-    def zero_one_loss(X, y, models):
+    def zero_one_loss(X, y,models):
         """Computes expert-instance correctness matrix.
         Args
         X: training instances
