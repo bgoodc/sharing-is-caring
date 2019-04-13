@@ -121,7 +121,8 @@ class MetaModel:
 
         gradient = []
         for i, layer in enumerate(self.model.layers):
-            gradient.append(layer.get_weights() - saved_weights[i])
+            gradient.append([new - old for (new, old) in
+                             zip(layer.get_weights(), saved_weights[i])])
 
         if not update:
             self.set_model_weights(saved_weights)
