@@ -60,7 +60,6 @@ class MetaModel:
 
             
 
-
         model.compile(optimizer=optimizer, loss='mean_squared_error')
         self.model = model
 
