@@ -8,7 +8,7 @@ setup(
         author='Brian Goodchild',
         author_email='bgoodc@cs.columbia.edu',
         liscense='',
-        packages=['sic'],
+        packages=['sic', 'sic.testing'],
         install_requires=[
             'numpy',
             'pandas',
