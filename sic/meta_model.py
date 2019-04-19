@@ -1,6 +1,7 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation
+from keras import optimizers
 import tensorflow as tf
 from tensorflow.train import GradientDescentOptimizer
 from privacy.dp_query.gaussian_query import GaussianAverageQuery
