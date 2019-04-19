@@ -8,37 +8,26 @@ from privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 
 # META MODEL
 class MetaModel:
-    def __init__(self, num_peers, input_shape, X, y, models, flags=None):
+    def __init__(self, input_shape, X, y, models, flags=None):
         """
         Implements meta-model
 
         Args:
-        num_peers: the number of peers with models
-        input_shape: tuple describing the shape of an instance
-                     e.g. for MNIST, input_shape = (784,)
         X: train data input
         y: train data labels
         models: list of models
         flags: tensorflow flags
         """
-        self.num_peers = num_peers
+        self.num_peers = num_peers = len(models)
         self.input_shape = input_shape
         self.X = X
         self.ground_truth = y
         self.models = models
 
-        assert len(models) == num_peers, "num_peers != len(models)"
 
         # compute expert_correctness matrix
         self.Y = self.zero_one_loss(X, y, models)
-
-        # initialize meta-model
-        self.model = model = Sequential([
-            Dense(2*num_peers + 2, input_shape=input_shape),
-            Activation('relu'),
-            Dense(num_peers),
-            Activation('softmax'),
-        ])
+        
 
         # set flags
         if flags is None:
@@ -60,8 +49,18 @@ class MetaModel:
         else:
             optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
 
-        self.model.compile(optimizer=optimizer, loss='mean_squared_error',
-                           metrics=['accuracy'])
+            
+        # initialize meta-model
+        model = Sequential()
+        model.add(Dense(30, activation='sigmoid',input_dim=2))
+        model.add(Dense(3, activation='relu',input_dim=30))
+        sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+
+        #model.compile(loss='mean_squared_error', optimizer=sgd)
+
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
+        self.model = model
+
 
     def predict_classes(self, X, batch_size=None):
         """Given a list of input data, return the output prediction.
@@ -85,19 +84,17 @@ class MetaModel:
     def get_experts(self, X):
         """Given a list of input data, return a list of experts for each data.
         """
-        val=self.model.predict(X)
-        return np.argmax(val, axis=1)
+        return self.model.predict_classes(X)
 
-    def get_model_weights(self):
+    def get_weights(self):
         """Return list of weights for each layer in the model
         """
-        return [layer.get_weights() for layer in self.model.layers]
+        return self.model.get_weights()
 
-    def set_model_weights(self, weights):
+    def set_weights(self, weights):
         """Sets the weights for each layer in the model
         """
-        for i, layer in enumerate(self.model.layers):
-            layer.set_weights(weights[i])
+        self.model.set_weights(weights)
             
     def compute_gradient(self, X=None, Y=None, update=True):
         """
@@ -116,26 +113,29 @@ class MetaModel:
         if Y is None:
             Y = self.Y
 
-        saved_weights = self.get_model_weights()
+        saved_weights = self.get_weights()
         self.model.train_on_batch(X, Y)
-
-        gradient = []
-        for i, layer in enumerate(self.model.layers):
-            gradient.append([new - old for (new, old) in
-                             zip(layer.get_weights(), saved_weights[i])])
-
+        new_weights = self.get_weights()
+        
+        gradient = [new - old for (new, old) in zip(new_weights, saved_weights)]
+        
         if not update:
-            self.set_model_weights(saved_weights)
+            self.set_weights(saved_weights)
 
         return gradient
 
     def update_gradient(self, gradients):
         """Averages array of gradients and add to model weights
         """
-        weights = self.get_model_weights()
-        for i, layer in enumerate(self.model.layers):
-            avg_grad = np.mean(np.array([gradient[i] for gradient in gradients]))
-        layer.set_weights(weights[i] + avg_grad)
+        weights = self.get_weights()
+        gradient = [0 for _ in weights]
+        num_gradients = len(gradients)
+        for steps in gradients:
+            gradient = [weight + (step / num_gradients)  
+                        for (weight, step) in zip(gradient, steps)]
+        
+        updates = [weight + step for (weight, step) in zip(weights, gradient)]
+        self.model.set_weights(updates)
 
 
     @staticmethod
@@ -167,7 +167,7 @@ class MetaModel:
         """Returns default tensorflow DP flags settings.
         """
         opts = dict()
-        opts['dpsgd'] =True
+        opts['dpsgd'] = True
         opts['learning_rate'] = 0.15
         opts['noise_multiplier'] = 1.1
         opts['l2_norm_clip'] = 1.0
