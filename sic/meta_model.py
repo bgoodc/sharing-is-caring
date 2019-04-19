@@ -9,7 +9,7 @@ from privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 
 # META MODEL
 class MetaModel:
-    def __init__(self, input_shape, models, X=None, y=None,flags=None):
+    def __init__(self,  input_shape, models, X=None, y=None,flags=None):
         """
         Implements meta-model
 
@@ -59,10 +59,7 @@ class MetaModel:
             optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
 
             
-        # initialize meta-model
-        model = Sequential()
-        model.add(Dense(30, activation='sigmoid',input_shape=input_shape))
-        model.add(Dense(self.num_peers, activation='relu'))
+
 
         model.compile(optimizer=optimizer, loss='mean_squared_error')
         self.model = model
@@ -76,7 +73,6 @@ class MetaModel:
                                     for model in self.models])
         expert_prediction = [pair[1][pair[0]]
                              for pair in zip(which_expert, predictions)]
-
         return np.array(expert_prediction)
 
     def accuracy(self, X_test, y_test):
@@ -168,6 +164,7 @@ class MetaModel:
 
         for i, model in enumerate(models):
             predictions = model.predict_classes(X)
+            y=y.reshape(-1)
             output[i] = np.equal(predictions, y)
 
         return np.transpose(output)
