@@ -62,7 +62,7 @@ class MetaModel:
         # initialize meta-model
         model = Sequential()
         model.add(Dense(30, activation='sigmoid',input_shape=input_shape))
-        model.add(Dense(3, activation='relu'))
+        model.add(Dense(self.num_peers, activation='relu'))
 
         model.compile(optimizer=optimizer, loss='mean_squared_error')
         self.model = model
