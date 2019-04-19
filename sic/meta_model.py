@@ -53,12 +53,8 @@ class MetaModel:
             
         # initialize meta-model
         model = Sequential()
-        model.add(Dense(30, activation='sigmoid',input_dim=2))
-        model.add(Dense(3, activation='relu',input_dim=30))
-
-        # alternative optimizer
-        #sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-        #model.compile(loss='mean_squared_error', optimizer=sgd)
+        model.add(Dense(30, activation='sigmoid',input_shape=input_shape))
+        model.add(Dense(3, activation='relu'))
 
         model.compile(optimizer=optimizer, loss='mean_squared_error')
         self.model = model
