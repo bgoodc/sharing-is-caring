@@ -1,3 +1,28 @@
+import sic
+from sic.testing.data_generators import MultiModalData
+from sic.local_model import LocalLinearModel, LocalSVM
+from sic.meta_model import MetaModel
+from sic.utils import random_distribution
+
+import seaborn as sns
+
+import random
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import optimize
+from sklearn.model_selection import train_test_split
+
+import matplotlib as mpl
+import heapq
+from scipy.linalg import eigh
+
+from sklearn import preprocessing
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+
 # Generate data distribution
 dim=2
 n_experts=3
@@ -57,10 +82,10 @@ meta_model_svm = MetaModel(input_shape=(dim,),  models=models, flags=flags)
 for k in range(krange):
     meta_model_svm.update_gradient([meta_model_svm.compute_gradient(X[i], Y[i], update=False) for i in range(n_experts)])
     if k%5==0:
-    print("num= ",k)
-    val=meta_model_svm.accuracy(plot_X, plot_y)
-    print(f"meta without DP : {val}")
-    acc_svm1.append((k,val))
+        print("num= ",k)
+        val=meta_model_svm.accuracy(plot_X, plot_y)
+        print(f"meta without DP : {val}")
+        acc_svm1.append((k,val))
 
 flags['dpsgd'] = True
 
@@ -68,10 +93,10 @@ meta_model_svm2 = MetaModel(input_shape=(dim,), models=models, flags=flags)
 for k in range(krange):
     meta_model_svm2.update_gradient([meta_model_svm2.compute_gradient(X[i], Y[i], update=False) for i in range(n_experts)])
     if k%5==0:
-    print("num= ",k)
-    val=meta_model_svm2.accuracy(plot_X, plot_y)
-    print(f"meta with DP : {val}")
-    acc_svm2.append((k,val))
+        print("num= ",k)
+        val=meta_model_svm2.accuracy(plot_X, plot_y)
+        print(f"meta with DP : {val}")
+        acc_svm2.append((k,val))
 
 
 # First time, need to run visualization code below
