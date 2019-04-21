@@ -93,9 +93,10 @@ class MetaModel:
     def get_experts(self, X):
         """Given a list of input data, return a list of experts for each data.
         """
-        if len(X)>2:
+        if len(X.shape)>2:
           tmp=X.reshape(X.shape[0],-1)
-        return self.model.predict_classes(tmp)
+          return self.model.predict_classes(tmp)
+        return self.model.predict_classes(X)
 
     def get_weights(self):
         """Return list of weights for each layer in the model
