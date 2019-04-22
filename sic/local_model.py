@@ -5,9 +5,6 @@ from keras.layers import Conv2D, Flatten, MaxPooling2D
 from keras.layers.core import Dense, Dropout, Activation
 from keras import optimizers
 from keras.utils.np_utils import to_categorical
-from tensorflow.train import GradientDescentOptimizer
-from privacy.dp_query.gaussian_query import GaussianAverageQuery
-from privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 
 from sklearn import svm
 
