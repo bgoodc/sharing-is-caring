@@ -1,7 +1,8 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation
-import keras.optimizers
+from keras.layers import Flatten
+from keras import optimizers
 import tensorflow as tf
 from tensorflow.train import GradientDescentOptimizer
 from privacy.dp_query.gaussian_query import GaussianAverageQuery
@@ -33,12 +34,14 @@ class MetaModel:
             self.Y = self.zero_one_loss(X, y, models)
 
         # initialize meta-model
-        self.model = model = Sequential([
-            Dense(2*num_peers + 2, input_shape=input_shape),
-            Activation('relu'),
-            Dense(num_peers),
-            Activation('softmax'),
-            ])
+
+        model = Sequential()
+        model.add(Dense(2*num_peers + 2,input_shape=input_shape))
+        model.add(Activation('relu'))
+        if len(input_shape)!=1:
+          model.add(Flatten())
+        model.add(Dense(num_peers))
+        model.add(Activation('softmax'))
 
         # set flags
         if flags is None:
@@ -79,14 +82,19 @@ class MetaModel:
         """Run the fit function on model.
         """
         if x is not None:
-            py=self.zero_one_loss(x,y,self.models)
-            self.model.fit(x, py,batch_size=1)
+          py = self.zero_one_loss(x,y,self.models)
+          if len(x.shape) > 2:
+            x=x.reshape(x.shape[0], -1)
+          self.model.fit(x, py, batch_size=1)
         else:
             self.model.fit(self.X, self.Y,batch_size=1)
 
     def get_experts(self, X):
         """Given a list of input data, return a list of experts for each data.
         """
+        if len(X.shape)>2:
+          tmp=X.reshape(X.shape[0],-1)
+          return self.model.predict_classes(tmp)
         return self.model.predict_classes(X)
 
     def get_weights(self):
@@ -115,7 +123,9 @@ class MetaModel:
             X = self.X
             Y = self.Y
         else:
-            Y=self.zero_one_loss(X,Y,self.models)
+          Y=self.zero_one_loss(X,Y,self.models)
+        if len(X.shape) > 2:
+          X = X.reshape(X.shape[0], -1)
 
         saved_weights = self.get_weights()
         self.model.train_on_batch(X, Y)
