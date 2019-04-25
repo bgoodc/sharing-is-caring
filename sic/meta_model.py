@@ -258,6 +258,6 @@ class MetaModelCIFAR(MetaModel):
         else:
             optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
 
-        model.compile(optimizer=optimizer, loss='mean_squared_error')
+        model.compile(optimizer=optimizer, loss='categorical_hinge')
 
         self.model = model
