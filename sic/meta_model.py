@@ -34,11 +34,10 @@ class MetaModel:
             self.Y = self.zero_one_loss(X, y, models)
 
         # initialize meta-model
-
         model = Sequential()
         model.add(Dense(2*num_peers + 2,input_shape=input_shape))
         model.add(Activation('relu'))
-        if len(input_shape)!=1:
+        if len(input_shape) > 1:
           model.add(Flatten())
         model.add(Dense(num_peers))
         model.add(Activation('softmax'))
@@ -62,7 +61,7 @@ class MetaModel:
         else:
             optimizer = GradientDescentOptimizer(learning_rate=flags['learning_rate'])
 
-        model.compile(optimizer=optimizer, loss='mean_squared_error')
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy')
         self.model = model
 
     def predict_classes(self, X, batch_size=None):
@@ -82,19 +81,20 @@ class MetaModel:
         """Run the fit function on model.
         """
         if x is not None:
-          py = self.zero_one_loss(x,y,self.models)
-          if len(x.shape) > 2:
-            x=x.reshape(x.shape[0], -1)
-          self.model.fit(x, py, batch_size=1)
+            py = self.zero_one_loss(x, y, self.models)
+            # if len(x.shape) > 2:
+                # x = x.reshape(x.shape[0], -1)
+            self.model.fit(x, py, batch_size=self.flags['batch_size'])
         else:
-            self.model.fit(self.X, self.Y,batch_size=1)
+            self.model.fit(self.X, self.Y, batch_size=self.flags['batch_size'])
 
     def get_experts(self, X):
         """Given a list of input data, return a list of experts for each data.
         """
-        if len(X.shape)>2:
-          tmp=X.reshape(X.shape[0],-1)
-          return self.model.predict_classes(tmp)
+        # if len(X.shape) > 2:
+            # tmp = X.reshape(X.shape[0],-1)
+            # return self.model.predict_classes(tmp)
+        # return self.model.predict_classes(X)
         return self.model.predict_classes(X)
 
     def get_weights(self):
@@ -123,13 +123,15 @@ class MetaModel:
             X = self.X
             Y = self.Y
         else:
-          Y=self.zero_one_loss(X,Y,self.models)
-        if len(X.shape) > 2:
-          X = X.reshape(X.shape[0], -1)
+            Y = self.zero_one_loss(X, Y, self.models)
+        # if len(X.shape) > 2:
+            # X = X.reshape(X.shape[0], -1)
 
         saved_weights = self.get_weights()
         self.model.train_on_batch(X, Y)
         new_weights = self.get_weights()
+
+        assert (new_weights[0] != saved_weights[0]).all()
 
         gradient = [new - old for (new, old) in zip(new_weights, saved_weights)]
 
@@ -171,7 +173,7 @@ class MetaModel:
 
         for i, model in enumerate(models):
             predictions = model.predict_classes(X)
-            y=y.reshape(-1)
+            y = y.reshape(-1)
             output[i] = np.equal(predictions, y)
 
         return np.transpose(output)
@@ -235,7 +237,6 @@ class MetaModelCIFAR(MetaModel):
         model.add(Dropout(0.5))
         model.add(Dense(num_peers))
         model.add(Activation('softmax'))
-
 
         # set flags
         if flags is None:
